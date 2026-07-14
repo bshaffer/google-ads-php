@@ -26,7 +26,6 @@ namespace Google\Ads\GoogleAds\V24\Services\Client;
 
 use Google\Ads\GoogleAds\Lib\V24\GoogleAdsGapicClientTrait;
 use Google\Ads\GoogleAds\V24\Services\CreateYouTubeVideoUploadRequest;
-use Google\Ads\GoogleAds\V24\Services\CreateYouTubeVideoUploadResponse;
 use Google\Ads\GoogleAds\V24\Services\RemoveYouTubeVideoUploadRequest;
 use Google\Ads\GoogleAds\V24\Services\RemoveYouTubeVideoUploadResponse;
 use Google\Ads\GoogleAds\V24\Services\UpdateYouTubeVideoUploadRequest;
@@ -36,6 +35,8 @@ use Google\ApiCore\CredentialsWrapper;
 use Google\ApiCore\GapicClientTrait;
 use Google\ApiCore\Options\ClientOptions;
 use Google\ApiCore\ResourceHelperTrait;
+use Google\ApiCore\ResumableUpload\ResumableUpload;
+use Google\ApiCore\ResumableUpload\ResumableUploadTrait;
 use Google\ApiCore\RetrySettings;
 use Google\ApiCore\Transport\TransportInterface;
 use Google\ApiCore\ValidationException;
@@ -54,7 +55,6 @@ use Psr\Log\LoggerInterface;
  * name, and additionally a parseName method to extract the individual identifiers
  * contained within formatted names that are returned by the API.
  *
- * @method PromiseInterface<CreateYouTubeVideoUploadResponse> createYouTubeVideoUploadAsync(CreateYouTubeVideoUploadRequest $request, array $optionalArgs = [])
  * @method PromiseInterface<RemoveYouTubeVideoUploadResponse> removeYouTubeVideoUploadAsync(RemoveYouTubeVideoUploadRequest $request, array $optionalArgs = [])
  * @method PromiseInterface<UpdateYouTubeVideoUploadResponse> updateYouTubeVideoUploadAsync(UpdateYouTubeVideoUploadRequest $request, array $optionalArgs = [])
  */
@@ -66,6 +66,7 @@ class YouTubeVideoUploadServiceClient
         GoogleAdsGapicClientTrait::modifyStreamingCallable insteadof GapicClientTrait;
     }
     use ResourceHelperTrait;
+    use ResumableUploadTrait;
 
     /** The name of the service. */
     private const SERVICE_NAME = 'google.ads.googleads.v24.services.YouTubeVideoUploadService';
@@ -223,6 +224,7 @@ class YouTubeVideoUploadServiceClient
     {
         $clientOptions = $this->buildClientOptions($options);
         $this->setClientOptions($clientOptions);
+        $this->resumableUploadClient = $this->createResumableUploadClient($clientOptions);
     }
 
     /** Handles execution of the async variants for each documented method. */
@@ -240,26 +242,36 @@ class YouTubeVideoUploadServiceClient
      * Uploads a video to Google-managed or advertiser owned (brand) YouTube
      * channel.
      *
-     * The async variant is
-     * {@see YouTubeVideoUploadServiceClient::createYouTubeVideoUploadAsync()} .
-     *
-     * @param CreateYouTubeVideoUploadRequest $request     A request to house fields associated with the call.
-     * @param array                           $callOptions {
+     * @param CreateYouTubeVideoUploadRequest $request                A request to house fields associated with the call.
+     * @param array                           $resumableUploadOptions {
      *     Optional.
      *
+     *     @type int $chunkSize
+     *           Optional. The size of each chunk to upload in bytes. Must be a multiple of
+     *           262144 (256 KB). Defaults to 8388608 (8 MB).
+     *     @type callable $progressCallback
+     *           Optional. A callback function executed after every chunk upload or query. The
+     *           callback should accept two arguments: (int $bytesUploaded,
+     *           {@see ResumableUpload} $upload).
+     *     @type array $headers
+     *           Optional. Key-value array of custom HTTP headers to include with upload
+     *           requests.
+     *     @type int $timeoutMillis
+     *           Optional. The timeout in milliseconds for the initial start call.
+     *     @type int $totalTimeoutMillis
+     *           Optional. The total timeout in milliseconds for the entire resumable upload
+     *           operation. Defaults to 600000 (10 minutes).
      *     @type RetrySettings|array $retrySettings
-     *           Retry settings to use for this call. Can be a {@see RetrySettings} object, or an
-     *           associative array of retry settings parameters. See the documentation on
-     *           {@see RetrySettings} for example usage.
+     *           Optional. Retry settings to use for the initial start call.
      * }
      *
-     * @return CreateYouTubeVideoUploadResponse
+     * @return ResumableUpload
      *
      * @throws ApiException Thrown if the API call fails.
      */
-    public function createYouTubeVideoUpload(CreateYouTubeVideoUploadRequest $request, array $callOptions = []): CreateYouTubeVideoUploadResponse
+    public function createYouTubeVideoUpload(CreateYouTubeVideoUploadRequest $request, array $resumableUploadOptions = []): ResumableUpload
     {
-        return $this->startApiCall('CreateYouTubeVideoUpload', $request, $callOptions)->wait();
+        return $this->startApiCall('CreateYouTubeVideoUpload', $request, $resumableUploadOptions);
     }
 
     /**

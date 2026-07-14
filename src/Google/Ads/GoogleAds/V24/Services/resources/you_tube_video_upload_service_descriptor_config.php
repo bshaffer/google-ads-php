@@ -24,7 +24,7 @@ return [
     'interfaces' => [
         'google.ads.googleads.v24.services.YouTubeVideoUploadService' => [
             'CreateYouTubeVideoUpload' => [
-                'callType' => \Google\ApiCore\Call::UNARY_CALL,
+                'callType' => \Google\ApiCore\Call::RESUMABLE_UPLOAD_CALL,
                 'responseType' => 'Google\Ads\GoogleAds\V24\Services\CreateYouTubeVideoUploadResponse',
                 'headerParams' => [
                     [
